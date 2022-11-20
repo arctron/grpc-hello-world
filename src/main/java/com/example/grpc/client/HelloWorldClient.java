@@ -1,13 +1,17 @@
 package com.example.grpc.client;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.example.grpc.HelloWorldRequest;
 import com.example.grpc.HelloWorldResponse;
 import com.example.grpc.HelloWorldServiceGrpc;
 import com.example.grpc.HelloWorldServiceGrpc.HelloWorldServiceBlockingStub;
+import com.example.grpc.HelloWorldServiceGrpc.HelloWorldServiceFutureStub;
 import com.example.grpc.HelloWorldServiceGrpc.HelloWorldServiceStub;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -36,6 +40,7 @@ public class HelloWorldClient {
 
         blockingRequest(channel);
         asyncRequest(channel);
+        futureRequest(channel);
         channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
     }
 
@@ -52,7 +57,7 @@ public class HelloWorldClient {
             log.error("RPC failed: {0}", e.getStatus());
             return;
         }
-        log.info("Response received form the server: " + response.getResponse());
+        log.info("(BS) Response received from server: {}", response.getResponse());
     }
 
     public static void asyncRequest(ManagedChannel channel) {
@@ -63,7 +68,7 @@ public class HelloWorldClient {
         StreamObserver<HelloWorldResponse> responseObserver = new StreamObserver<HelloWorldResponse>() {
             @Override
             public void onNext(HelloWorldResponse response) {
-                log.info("Response received: {}", response.getResponse());
+                log.info("(AS) Response received from server: {}", response.getResponse());
             }
 
             @Override
@@ -82,15 +87,28 @@ public class HelloWorldClient {
 
         asyncStub.helloWorld(request, responseObserver);
 
-        boolean rpcSuccess = false;
-
         try {
-            rpcSuccess = finishLatch.await(1, TimeUnit.MINUTES);
+            finishLatch.await(1, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             log.error("Thread interrupted", e);
             Thread.currentThread().interrupt();
         }
+    }
 
-        log.info("RPC status = {}", rpcSuccess ? "Successful" : "Failed");
+    public static void futureRequest(ManagedChannel channel) {
+        HelloWorldServiceFutureStub futureStub = HelloWorldServiceGrpc.newFutureStub(channel);
+        HelloWorldRequest request = HelloWorldRequest.newBuilder().build();
+
+        ListenableFuture<HelloWorldResponse> futureResponse = futureStub.helloWorld(request);
+
+        try {
+            HelloWorldResponse response = futureResponse.get(1, TimeUnit.MINUTES);
+            log.info("(LF) Response received from server: {}", response.getResponse());
+        } catch (InterruptedException e) {
+            log.error("Exception occured while making RPC call", e);
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException | TimeoutException e) {
+            log.error("Exception occured while making RPC call", e);
+        }
     }
 }
