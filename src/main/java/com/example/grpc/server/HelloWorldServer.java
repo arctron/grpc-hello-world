@@ -13,50 +13,26 @@ import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class HelloWorldServer {
+public class HelloWorldServer implements Runnable {
     private Server server;
 
-    private void start() throws IOException {
-        int port = 50051;
-
+    public HelloWorldServer(int port) {
+        log.info("Building server on port {}", port);
         server = ServerBuilder.forPort(port)
                 .addService(new HelloWorldService())
-                .build()
-                .start();
+                .build();
+    }
 
-        log.info("Server started, listening on " + port);
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                log.info("Shutting down gRPC server since JVM is shutting down");
-                try {
-                    HelloWorldServer.this.stop();
-                } catch (InterruptedException e) {
-                    log.error("InterruptedException occcured", e);
-                    Thread.currentThread().interrupt();
-                }
-                log.info("Server shut down");
+    public void shutdown() {
+        log.info("Shutting down gRPC server");
+        if (server != null) {
+            try {
+                server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                log.error("InterruptedException ", e);
+                Thread.currentThread().interrupt();
             }
-        });
-    }
-
-    private void stop() throws InterruptedException {
-        if (server != null) {
-            server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
         }
-    }
-
-    private void blockUntilShutdown() throws InterruptedException {
-        if (server != null) {
-            server.awaitTermination();
-        }
-    }
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        final HelloWorldServer server = new HelloWorldServer();
-        server.start();
-        server.blockUntilShutdown();
     }
 
     private static class HelloWorldService extends HelloWorldServiceGrpc.HelloWorldServiceImplBase {
@@ -66,6 +42,22 @@ public class HelloWorldServer {
             HelloWorldResponse response = HelloWorldResponse.newBuilder().setResponse("Hello World!").build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+        }
+    }
+
+    @Override
+    public void run() {
+        try {
+            server.start();
+            log.info("Server started, listening on " + server.getPort());
+        } catch (IOException e) {
+            log.error("IOException ", e);
+        }
+        try {
+            server.awaitTermination();
+        } catch (InterruptedException e) {
+            log.error("InterruptedException ", e);
+            Thread.currentThread().interrupt();
         }
     }
 }
