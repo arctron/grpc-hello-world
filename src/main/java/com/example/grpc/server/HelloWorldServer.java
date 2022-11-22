@@ -35,7 +35,7 @@ public class HelloWorldServer implements Runnable {
         }
     }
 
-    private static class HelloWorldService extends HelloWorldServiceGrpc.HelloWorldServiceImplBase {
+    static class HelloWorldService extends HelloWorldServiceGrpc.HelloWorldServiceImplBase {
 
         @Override
         public void helloWorld(HelloWorldRequest request, StreamObserver<HelloWorldResponse> responseObserver) {

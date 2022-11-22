@@ -49,6 +49,12 @@
 			<artifactId>grpc-stub</artifactId>
 			<version>1.51.0</version>
 		</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-testing</artifactId>
+			<version>1.51.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
