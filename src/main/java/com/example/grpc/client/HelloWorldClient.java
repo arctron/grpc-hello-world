@@ -31,20 +31,20 @@ public class HelloWorldClient {
 
     private HelloWorldRequest request;
 
-    public HelloWorldClient(String host, int port) {
-        channel = ManagedChannelBuilder.forAddress(host, port)
-                .usePlaintext() // remove this if SSL/TLS is enabled
-                .build();
-
-        blockingStub = HelloWorldServiceGrpc
-                .newBlockingStub(channel);
+    public HelloWorldClient(ManagedChannel channel) {
+        blockingStub = HelloWorldServiceGrpc.newBlockingStub(channel);
 
         asyncStub = HelloWorldServiceGrpc.newStub(channel);
 
         futureStub = HelloWorldServiceGrpc.newFutureStub(channel);
 
         request = HelloWorldRequest.newBuilder().build();
+    }
 
+    public HelloWorldClient(String host, int port) {
+        this(ManagedChannelBuilder.forAddress(host, port)
+                .usePlaintext() // remove this if SSL/TLS is enabled
+                .build());
     }
 
     public void shutdown() {
