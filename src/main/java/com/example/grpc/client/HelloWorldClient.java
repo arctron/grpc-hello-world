@@ -61,7 +61,7 @@ public class HelloWorldClient {
 
         try {
             HelloWorldResponse response = blockingStub.helloWorld(request);
-            log.info("(BS) Response received from server: {}", response.getResponse());
+            log.info("(Blocking stub) Response received from server: {}", response.getResponse());
             return Optional.of(response);
         } catch (StatusRuntimeException e) {
             log.error("RPC failed: {0}", e.getStatus());
@@ -76,7 +76,7 @@ public class HelloWorldClient {
             @Override
             public void onNext(HelloWorldResponse response) {
                 responseAtomicReference.set(response);
-                log.info("(AS) Response received from server: {}", response.getResponse());
+                log.info("(Async stub) Response received from server: {}", response.getResponse());
             }
 
             @Override
@@ -116,7 +116,7 @@ public class HelloWorldClient {
 
         try {
             HelloWorldResponse response = futureResponse.get(1, TimeUnit.MINUTES);
-            log.info("(LF) Response received from server: {}", response.getResponse());
+            log.info("(Future stub) Response received from server: {}", response.getResponse());
             return Optional.of(response);
         } catch (InterruptedException e) {
             log.error("Exception occured while making RPC call", e);
