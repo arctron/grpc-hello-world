@@ -50,7 +50,9 @@ public class HelloWorldClient {
     public void shutdown() {
         log.info("Shutting down gRPC client");
         try {
-            channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+            if (channel != null) {
+                channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+            }
         } catch (InterruptedException e) {
             log.error("Thread interrupted", e);
             Thread.currentThread().interrupt();
