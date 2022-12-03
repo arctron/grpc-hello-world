@@ -24,6 +24,7 @@ public class HelloWorldClientTest {
     @Rule
     public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
+    // implement the fake service
     private final HelloWorldServiceImplBase serviceImpl = new HelloWorldServiceImplBase() {
         @Override
         public void helloWorld(HelloWorldRequest request, StreamObserver<HelloWorldResponse> responseObserver) {
@@ -37,7 +38,6 @@ public class HelloWorldClientTest {
 
     @Before
     public void setUp() throws Exception {
-        // implement the fake service
 
         String serverName = InProcessServerBuilder.generateName();
 
